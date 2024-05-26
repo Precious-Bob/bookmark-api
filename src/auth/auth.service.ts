@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { AuthDto } from './dto';
+import { SigninDto, signupDto } from './dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon from 'argon2';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
@@ -14,20 +14,21 @@ export class AuthService {
     private config: ConfigService
   ) {}
 
-  async signup(dto: AuthDto) {
+  async signup(dto: signupDto) {
     try {
+      const { email, firstName, lastName, password } = dto;
       // Generate password hash
-      const hash = await argon.hash(dto.password);
+      const hash = await argon.hash(password);
       // Save the new user in the db
       const user = await this.prisma.user.create({
         data: {
-          email: dto.email,
+          email,
           hash,
-          firstName: dto.firstName,
-          lastName: dto.lastName
+          firstName,
+          lastName
         }
       });
-      return this.signToken(user.id, user.email);
+      return this.signToken(user.id, user.email); // Jwt stuff
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
@@ -37,7 +38,7 @@ export class AuthService {
     }
   }
 
-  async signin(dto: AuthDto) {
+  async signin(dto: SigninDto) {
     // Find the user by email
     const user = await this.prisma.user.findUnique({
       where: {
@@ -73,3 +74,4 @@ export class AuthService {
   }
 }
 // Note: since we're returning a promise(this.signAysnc), we don't need to put async beside the signToken. it'll only be useful if we're doing some asynchronous opperation with await. (update: this doesn't apply to this case again)
+
