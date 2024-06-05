@@ -74,4 +74,3 @@ export class AuthService {
   }
 }
 // Note: since we're returning a promise(this.signAysnc), we don't need to put async beside the signToken. it'll only be useful if we're doing some asynchronous opperation with await. (update: this doesn't apply to this case again)
-
